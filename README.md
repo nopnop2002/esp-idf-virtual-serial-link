@@ -73,7 +73,7 @@ I (291393) MAIN: Wireless-->USB [A*7A
 
 # Software requirements
 ESP-IDF V4.4/V5.0.   
-ESP-IDF V5 is required when using ESP32-C2.   
+
 
 # Hardware requirements
 1. ESP32-S2/S3 Development board   
