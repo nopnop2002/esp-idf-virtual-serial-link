@@ -46,7 +46,7 @@ ESP-NOW eliminates the need for a router.
 +------------+     +------------+        +------------+     +------------+ 
 ```
 
-
+___Since this application performs unicast communication, there is no limit to the order in which ESP32 is started.___   
 
 # Limitation
 The number of characters that can be read at once with tinyusb_cdcacm_read() is limited to 64 bytes.   
