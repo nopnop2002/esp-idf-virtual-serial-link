@@ -6,7 +6,7 @@ When PCs had D-SUB serial ports, serial communication between two PCs was very e
 Communication was possible with only one RS232C cross cable.   
 ```
 +------------+                                              +------------+
-| PC1        |              RS232C Cross-Cable              | PC2        |
+| PC1        | D-SUB        RS232C Cross-Cable        D-SUB | PC2        |
 |            |<-------------------------------------------->|            |
 |            |                                              |            |
 +------------+                                              +------------+
