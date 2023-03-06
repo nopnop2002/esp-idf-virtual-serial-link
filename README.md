@@ -63,7 +63,7 @@ I (30354) tinyusb_cdc_rx_callback: CONFIG_TINYUSB_CDC_RX_BUFSIZE=256 rx_size=6
 I (30374) tinyusb_cdc_rx_callback: 0x3fca6944   41 2a 37 42 0d 0a                                 |A*7B..|
 ```
 
-Data exceeding 64 bytes is divided and sent to the other party.   
+Data exceeding 64 bytes is divided and arrives at the other party.   
 ```
 I (291393) MAIN: Wireless-->USB [$GPRMC,021613,A,3540.909988,N,13946.196413,E,16.3,25.3,050323,,,]
 I (291393) MAIN: Wireless-->USB [A*7A
