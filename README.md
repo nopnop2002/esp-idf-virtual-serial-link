@@ -49,9 +49,9 @@ ESP-NOW eliminates the need for a router.
 
 
 # Limitation
-The number of characters that can be read at once with tinyusb_cdcacm_read() is limited to 64 bytes.
-Changing CONFIG_TINYUSB_CDC_RX_BUFSIZE does not work around this limitation.
-If anyone knows a workaround, please let me know.
+The number of characters that can be read at once with tinyusb_cdcacm_read() is limited to 64 bytes.   
+Changing CONFIG_TINYUSB_CDC_RX_BUFSIZE does not work around this limitation.   
+If anyone knows a workaround, please let me know.   
 ```
 I (30304) tinyusb_cdc_rx_callback: CONFIG_TINYUSB_CDC_RX_BUFSIZE=256 rx_size=64
 I (30304) tinyusb_cdc_rx_callback: Data from channel=0 rx_size=64
