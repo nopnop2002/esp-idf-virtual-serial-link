@@ -107,7 +107,7 @@ idf.py flash
 ![config-top](https://user-images.githubusercontent.com/6020549/223055571-090c3f71-5c81-431f-ab56-da831d41f6bd.jpg)
 
 
-### Configuration for ESPNOW Unicast
+### Configuration for UDP Unicast
 The two ESPs must use the same port.   
 In order to perform UDP unicast communication, the IP address of the other party is required.   
 This app uses mDNS to look up peer IP addresses with the same port number.   
@@ -135,7 +135,7 @@ When providing two or more sets of communication circuits, it is necessary to ch
 +------------+     +------------+        +------------+     +------------+ 
 ```
 
-### Configuration for UDP Unicast
+### Configuration for ESPNOW Unicast
 The two ESPs must use the same channel.   
 In order to perform ESPNOW unicast communication, the MAC address of the other party is required.   
 This app uses PING communication to ask for peer MAC addresses with the same channel number.   
