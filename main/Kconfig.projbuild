@@ -1,0 +1,89 @@
+menu "Application Configuration"
+
+	choice WIRELESS_MODE
+		prompt "Wireless protocol"
+		default WIFI_MODEL
+		help
+			Select Wireless protocol.
+		config WIFI_MODE
+			bool "Use WiFi UDP Unicast"
+			help
+				Use WiFi UDP Unicast.
+		config ESPNOW_MODE
+			bool "Use ESPNOW Unicast"
+			help
+				Use ESPNOW Unicast.
+	endchoice
+
+	config ESP_WIFI_SSID
+		depends on WIFI_MODE
+		string "WiFi SSID"
+		default "myssid"
+		help
+			SSID (network name) for the example to connect to.
+
+	config ESP_WIFI_PASSWORD
+		depends on WIFI_MODE
+		string "WiFi Password"
+		default "mypassword"
+		help
+			WiFi password (WPA or WPA2) for the example to use.
+
+	config ESP_MAXIMUM_RETRY
+		depends on WIFI_MODE
+		int "Maximum retry"
+		default 5
+		help
+			Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
+
+	config UDP_PORT
+		depends on WIFI_MODE
+		int "UDP Port Number"
+		range 49152 65535
+		default 49876
+		help
+			Communication UDP port number.
+
+	config MDNS_HOSTNAME
+		depends on WIFI_MODE
+		string
+		default "esp32-mdns"
+
+	config ESPNOW_PMK
+		depends on ESPNOW_MODE
+		string
+		default "pmk1234567890123"
+		help
+			ESPNOW primary master for the example to use. The length of ESPNOW primary master must be 16 bytes.
+
+	config ESPNOW_LMK
+		depends on ESPNOW_MODE
+		string
+		default "lmk1234567890123"
+		help
+			ESPNOW local master for the example to use. The length of ESPNOW local master must be 16 bytes.
+
+	config ESPNOW_CHANNEL
+		depends on ESPNOW_MODE
+		int "Channel"
+		default 1
+		range 0 14
+		help
+			The channel on which sending and receiving ESPNOW data.
+
+	config ESPNOW_SEND_LEN
+		depends on ESPNOW_MODE
+		int
+		range 10 250
+		default 74
+		help
+			Length of ESPNOW data to be sent, unit: byte.
+
+	config ESPNOW_ENABLE_LONG_RANGE
+		depends on ESPNOW_MODE
+		bool "Enable Long Range"
+		default "n"
+		help
+			When enable long range, the PHY rate of ESP32 will be 512Kbps or 256Kbps
+
+endmenu
