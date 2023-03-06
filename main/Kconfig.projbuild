@@ -2,7 +2,7 @@ menu "Application Configuration"
 
 	choice WIRELESS_MODE
 		prompt "Wireless protocol"
-		default WIFI_MODEL
+		default WIFI_MODE
 		help
 			Select Wireless protocol.
 		config WIFI_MODE
