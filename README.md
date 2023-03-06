@@ -36,7 +36,7 @@ By using this, serial communication can be made wireless.
 +------------+     +------------+        +------------+     +------------+ 
 ```
 
-ESP-NOW eliminates the need for a router.   
+ESPNOW eliminates the need for a router.   
 ```
 +------------+     +------------+        +------------+     +------------+
 | PC1        | USB | ESP32S2/S3 | ESPNOW | ESP32S2/S3 | USB | PC2        |
