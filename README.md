@@ -166,5 +166,4 @@ The range of the channel of paired devices is from 1 to 14.
 # Official example   
 ESPNOW's official example is [here](https://github.com/espressif/esp-idf/tree/master/examples/wifi/espnow), but there are some defects.   
 The most egregious defect is the inability to communicate using channels other than 0 and 1.   
-I've reported the problem and how to fix it to espressIF.   
 This app solved that problem.   
