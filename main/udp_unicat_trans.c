@@ -56,13 +56,13 @@ static void mdns_print_results(mdns_result_t *results, char * hostname, char * i
 #if _DEBUG_
 			printf("  PTR : %s.%s.%s\n", r->instance_name, r->service_type, r->proto);
 #endif
-			strcpy(hostname, r->hostname);
-			*port = r->port;
 		}
 		if (r->hostname) {
 #if _DEBUG_
 			printf("  SRV : %s.local:%u\n", r->hostname, r->port);
 #endif
+			strcpy(hostname, r->hostname);
+			*port = r->port;
 		}
 		if (r->txt_count) {
 #if _DEBUG_
