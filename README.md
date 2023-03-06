@@ -138,7 +138,7 @@ When providing two or more sets of communication circuits, it is necessary to ch
 ### Configuration for ESPNOW Unicast
 The two ESPs must use the same channel.   
 In order to perform ESPNOW unicast communication, the MAC address of the other party is required.   
-This app uses PING communication to ask for peer MAC addresses with the same channel number.   
+This app uses PING communication to look up peer MAC addresses with the same channel number.   
 
 ![config-espnow](https://user-images.githubusercontent.com/6020549/223055585-5e8b91dc-e356-41ba-8d5a-6a35d8c25972.jpg)
 
