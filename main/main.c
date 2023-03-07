@@ -44,7 +44,6 @@ static int s_retry_num = 0;
 #endif // CONFIG_WIFI_MODE
 
 int line_status = false;
-tinyusb_cdcacm_itf_t itf;
 
 MessageBufferHandle_t xMessageBufferSend;
 MessageBufferHandle_t xMessageBufferRecv;
@@ -400,8 +399,8 @@ void app_main(void)
 			//ESP_LOGI(TAG, "xMessageBufferReceive buffer=[%.*s]", payload.length, payload.buffer);
 			ESP_LOGI(TAG, "Wireless-->USB [%.*s]", payload.length, payload.buffer);
 			if (line_status) {
-				tinyusb_cdcacm_write_queue(itf, (uint8_t *)payload.buffer, payload.length);
-				if (payload.length != 64) tinyusb_cdcacm_write_flush(itf, 0);
+				tinyusb_cdcacm_write_queue(TINYUSB_CDC_ACM_0, (uint8_t *)payload.buffer, payload.length);
+				if (payload.length != 64) tinyusb_cdcacm_write_flush(TINYUSB_CDC_ACM_0, 0);
 			} else {
 				ESP_LOGW(TAG, "USB not online");
 			}
