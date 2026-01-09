@@ -43,44 +43,37 @@ static void espnow_deinit(example_espnow_send_param_t *send_param);
 /* ESPNOW sending or receiving callback function is called in WiFi task.
  * Users should not do lengthy operations from this task. Instead, post
  * necessary data to a queue and handle it from a lower priority task. */
-static void example_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
+static void example_espnow_send_cb(const esp_now_send_info_t *tx_info, esp_now_send_status_t status)
 {
-	example_espnow_event_t evt_send;
-	example_espnow_event_send_cb_t *send_cb = &evt_send.info.send_cb;
+	example_espnow_event_t evt;
+	example_espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
 
-	if (mac_addr == NULL) {
+	if (tx_info == NULL) {
 		ESP_LOGE(__FUNCTION__, "Send cb arg error");
 		return;
 	}
 
-	evt_send.id = EXAMPLE_ESPNOW_SEND_CB;
-	memcpy(send_cb->mac_addr, mac_addr, ESP_NOW_ETH_ALEN);
+	evt.id = EXAMPLE_ESPNOW_SEND_CB;
+	memcpy(send_cb->mac_addr, tx_info->des_addr, ESP_NOW_ETH_ALEN);
 	send_cb->status = status;
-	if (xQueueSend(xQueueESPNOWSend, &evt_send, ESPNOW_MAXDELAY) != pdTRUE) {
+	if (xQueueSend(xQueueESPNOWSend, &evt, ESPNOW_MAXDELAY) != pdTRUE) {
 		ESP_LOGW(__FUNCTION__, "xQueueSend fail");
 	}
 }
 
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
 static void example_espnow_recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *data, int len)
-#else
-static void example_espnow_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int len)
-#endif
 {
 	ESP_LOGD(__FUNCTION__, "len=%d", len);
-	//ESP_LOG_BUFFER_HEXDUMP(__FUNCTION__, data, len, ESP_LOG_INFO);
-	example_espnow_event_t evt_send;
-	example_espnow_event_recv_cb_t *recv_cb = &evt_send.info.recv_cb;
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+	example_espnow_event_t evt;
+	example_espnow_event_recv_cb_t *recv_cb = &evt.info.recv_cb;
 	uint8_t * mac_addr = recv_info->src_addr;
-#endif
 
 	if (mac_addr == NULL || data == NULL || len <= 0) {
 		ESP_LOGE(__FUNCTION__, "Receive cb arg error");
 		return;
 	}
 
-	evt_send.id = EXAMPLE_ESPNOW_RECV_CB;
+	evt.id = EXAMPLE_ESPNOW_RECV_CB;
 	memcpy(recv_cb->mac_addr, mac_addr, ESP_NOW_ETH_ALEN);
 	recv_cb->data = malloc(len);
 	if (recv_cb->data == NULL) {
@@ -89,7 +82,7 @@ static void example_espnow_recv_cb(const uint8_t *mac_addr, const uint8_t *data,
 	}
 	memcpy(recv_cb->data, data, len);
 	recv_cb->data_len = len;
-	if (xQueueSend(xQueueESPNOWSend, &evt_send, ESPNOW_MAXDELAY) != pdTRUE) {
+	if (xQueueSend(xQueueESPNOWSend, &evt, ESPNOW_MAXDELAY) != pdTRUE) {
 		ESP_LOGW(__FUNCTION__, "xQueueSend fail");
 		free(recv_cb->data);
 	}
@@ -221,7 +214,6 @@ void espnow_task(void *pvParameters)
 	send_param->buffer = malloc(param.espnow_send_len);
 	if (send_param->buffer == NULL) {
 		ESP_LOGE(TAG, "Malloc send_param->buffer fail");
-		free(send_param);
 		espnow_deinit(broadcast);
 		espnow_deinit(send_param);
 		vTaskDelete(NULL);
