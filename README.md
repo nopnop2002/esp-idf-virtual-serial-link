@@ -96,7 +96,7 @@ ESP32-S2/S3 BOARD          USB CONNECTOR
 # Installation
 
 ```Shell
-git clone https://github.com/nopnop2002/esp-idf-virtual-serial-port
+git clone https://github.com/nopnop2002/esp-idf-virtual-serial-link
 cd esp-idf-virtual-serial-port
 idf.py set-target {esp32s2/esp32s3}
 idf.py menuconfig
