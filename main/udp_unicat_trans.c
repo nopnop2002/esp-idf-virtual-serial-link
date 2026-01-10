@@ -22,16 +22,12 @@ extern MessageBufferHandle_t xMessageBufferSend;
 
 static const char *TAG = "SEND";
 
+#define _DEBUG_ 0
 
-#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
-/* these strings match tcpip_adapter_if_t enumeration */
-static const char * if_str[] = {"STA", "AP", "ETH", "MAX"};
-#endif
-
+#if _DEBUG_
 /* these strings match mdns_ip_protocol_t enumeration */
 static const char * ip_protocol_str[] = {"V4", "V6", "MAX"};
-
-#define _DEBUG_ 0
+#endif
 
 static void mdns_print_results(mdns_result_t *results, char * hostname, char * ip, uint16_t *port)
 {
@@ -42,15 +38,10 @@ static void mdns_print_results(mdns_result_t *results, char * hostname, char * i
 #endif
 	while (r) {
 #if _DEBUG_
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
 		esp_netif_get_desc(r->esp_netif);
 		printf("%d: Interface: %s, Type: %s, TTL: %"PRIu32"\n",
 			i++, esp_netif_get_desc(r->esp_netif), ip_protocol_str[r->ip_protocol], r->ttl);
 
-#else
-		printf("%d: Interface: %s, Type: %s, TTL: %u\n",
-			i++, if_str[r->tcpip_if], ip_protocol_str[r->ip_protocol], r->ttl);
-#endif
 #endif
 		if (r->instance_name) {
 #if _DEBUG_

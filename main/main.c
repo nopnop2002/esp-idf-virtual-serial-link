@@ -275,11 +275,11 @@ void udp_receive(void *pvParameters);
 #if CONFIG_ESPNOW_MODE
 static void timer_espnow_cb(TimerHandle_t xTimer)
 {
-    example_espnow_event_t evt;
-    evt.id = EXAMPLE_ESPNOW_PING_RQ;
-    if (xQueueSend(xQueueESPNOWSend, &evt, 100) != pdTRUE) {
-        ESP_LOGW(__FUNCTION__, "Send send queue fail");
-    }
+	example_espnow_event_t evt;
+	evt.id = EXAMPLE_ESPNOW_PING_RQ;
+	if (xQueueSend(xQueueESPNOWSend, &evt, 100) != pdTRUE) {
+		ESP_LOGW(__FUNCTION__, "Send send queue fail");
+	}
 }
 
 void espnow_task(void *pvParameter);
@@ -352,10 +352,10 @@ void app_main(void)
 	configASSERT( xMessageBufferSend );
 	xMessageBufferRecv = xMessageBufferCreate(sizeof(PAYLOAD_t)*30);
 	configASSERT( xMessageBufferRecv );
-    xQueueESPNOWSend = xQueueCreate(ESPNOW_QUEUE_SIZE, sizeof(example_espnow_event_t));
-    configASSERT( xQueueESPNOWSend );
-    xQueueESPNOWRecv = xQueueCreate(ESPNOW_QUEUE_SIZE, sizeof(example_espnow_event_t));
-    configASSERT( xQueueESPNOWRecv );
+	xQueueESPNOWSend = xQueueCreate(ESPNOW_QUEUE_SIZE, sizeof(example_espnow_event_t));
+	configASSERT( xQueueESPNOWSend );
+	xQueueESPNOWRecv = xQueueCreate(ESPNOW_QUEUE_SIZE, sizeof(example_espnow_event_t));
+	configASSERT( xQueueESPNOWRecv );
 
 #if CONFIG_WIFI_MODE
 	// Create Timer
@@ -406,31 +406,31 @@ void app_main(void)
 #endif // CONFIG_WIFI_MODE
 
 #if CONFIG_ESPNOW_MODE
-    // Start ESPNOW Take
-    PARAMETER_t param1;
-    strcpy(param1.espnow_pmk, CONFIG_ESPNOW_PMK);
-    strcpy(param1.espnow_lmk, CONFIG_ESPNOW_LMK);
-    param1.espnow_channel = CONFIG_ESPNOW_CHANNEL;
-    param1.espnow_send_len = CONFIG_ESPNOW_SEND_LEN;
-    param1.espnow_enable_long_range = false;
+	// Start ESPNOW Take
+	PARAMETER_t param1;
+	strcpy(param1.espnow_pmk, CONFIG_ESPNOW_PMK);
+	strcpy(param1.espnow_lmk, CONFIG_ESPNOW_LMK);
+	param1.espnow_channel = CONFIG_ESPNOW_CHANNEL;
+	param1.espnow_send_len = CONFIG_ESPNOW_SEND_LEN;
+	param1.espnow_enable_long_range = false;
 #if CONFIG_ESPNOW_ENABLE_LONG_RANGE
-    param1.espnow_enable_long_range = true;
+	param1.espnow_enable_long_range = true;
 #endif
-    xTaskCreate(espnow_task, "ESPNOW", 1024*4, (void *)&param1, 4, NULL);
+	xTaskCreate(espnow_task, "ESPNOW", 1024*4, (void *)&param1, 4, NULL);
 
 	example_espnow_event_t evt_recv;
-    while(1) {
+	while(1) {
 		xQueueReceive(xQueueESPNOWRecv, &evt_recv, portMAX_DELAY);
 		ESP_LOGD(TAG, "xQueueReceive evt_recv.len=%d", evt_recv.len);
 		//ESP_LOG_BUFFER_HEXDUMP(TAG, evt_recv.payload, evt_recv.len, ESP_LOG_INFO);
 		ESP_LOGI(TAG, "Wireless-->USB [%.*s]", evt_recv.len, evt_recv.payload);
 		if (line_status) {
-			tinyusb_cdcacm_write_queue(itf, evt_recv.payload, evt_recv.len);
-			if (evt_recv.len != 64) tinyusb_cdcacm_write_flush(itf, 0);
+			tinyusb_cdcacm_write_queue(TINYUSB_CDC_ACM_0, evt_recv.payload, evt_recv.len);
+			if (evt_recv.len != 64) tinyusb_cdcacm_write_flush(TINYUSB_CDC_ACM_0, 0);
 		} else {
 			ESP_LOGW(TAG, "USB not online");
 		}
-    }
+	}
 
 #endif
 }
