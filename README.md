@@ -72,7 +72,8 @@ I (291393) MAIN: Wireless-->USB [A*7A
 ```
 
 # Software requirements
-ESP-IDF V4.4/V5.0.   
+ESP-IDF V5.0 or later.   
+ESP-IDF V4.4 release branch reached EOL in July 2024.   
 
 
 # Hardware requirements
