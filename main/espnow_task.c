@@ -166,6 +166,7 @@ void espnow_task(void *pvParameters)
 
 	// Initialize ESPNOW
 	ESP_ERROR_CHECK(espnow_init(param));
+	ESP_LOGW(TAG, "Connect the USB cable to the host");
 
 	/* Initialize broadcast parameters. */
 	example_espnow_send_param_t *broadcast = NULL;
