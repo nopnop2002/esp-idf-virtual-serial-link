@@ -247,7 +247,7 @@ void espnow_task(void *pvParameters)
 			ESP_LOGD(TAG, "EXAMPLE_ESPNOW_SEND_RQ");
 			ESP_LOGD(TAG, "send_param->dest_mac "MACSTR, MAC2STR(send_param->dest_mac));
 			if (memcmp(s_example_broadcast_mac, send_param->dest_mac, sizeof(send_param->dest_mac)) == 0) {
-				ESP_LOGW(TAG, "Not Connected peer");
+				ESP_LOGW(TAG, "Not connected to peer");
 			} else {
 				ESP_LOGD(TAG, "Send to "MACSTR, MAC2STR(send_param->dest_mac));
 				//ESP_LOG_BUFFER_HEXDUMP(TAG, evt_send.payload, evt_send.len, ESP_LOG_INFO);
@@ -283,11 +283,11 @@ void espnow_task(void *pvParameters)
 				diffTick = currentTick - lastBroadcastTick;
 				ESP_LOGD(TAG, "diffTick=%"PRIu32, diffTick);
 				if (diffTick > 1000) {
-					ESP_LOGW(TAG, "Lost a peer");
+					ESP_LOGW(TAG, "Lost my peer. esp_now_del_peer ["MACSTR"]", MAC2STR(send_param->dest_mac));
+					ESP_ERROR_CHECK(esp_now_del_peer(send_param->dest_mac));
 					memcpy(send_param->dest_mac, s_example_broadcast_mac, ESP_NOW_ETH_ALEN);
 				}
 			}
-			//bool is_broadcast = IS_BROADCAST_ADDR(send_cb->mac_addr);
 
 		} else if (evt_send.id == EXAMPLE_ESPNOW_RECV_CB) {
 			ESP_LOGD(TAG, "EXAMPLE_ESPNOW_RECV_CB");
@@ -314,7 +314,7 @@ void espnow_task(void *pvParameters)
 					memcpy(peer->lmk, param.espnow_lmk, ESP_NOW_KEY_LEN);
 					memcpy(peer->peer_addr, recv_cb->mac_addr, ESP_NOW_ETH_ALEN);
 					ESP_ERROR_CHECK( esp_now_add_peer(peer) );
-					ESP_LOGW(TAG, "Connected peer. esp_now_add_peer ["MACSTR"]", MAC2STR(recv_cb->mac_addr));
+					ESP_LOGW(TAG, "Connected with peer. esp_now_add_peer ["MACSTR"]", MAC2STR(recv_cb->mac_addr));
 					free(peer);
 				} else {
 					ESP_LOGD(TAG, "esp_now_is_peer_exist ["MACSTR"]", MAC2STR(recv_cb->mac_addr));
