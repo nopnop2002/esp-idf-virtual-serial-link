@@ -230,6 +230,7 @@ void espnow_task(void *pvParameters)
 		vTaskDelete(NULL);
 	}
 
+	TickType_t lastBroadcastTick = xTaskGetTickCount();
 	while (xQueueReceive(xQueueESPNOWSend, &evt_send, portMAX_DELAY) == pdTRUE) {
 		if (evt_send.id == EXAMPLE_ESPNOW_PING_RQ) {
 			ESP_LOGD(TAG, "EXAMPLE_ESPNOW_PING_RQ");
@@ -275,7 +276,16 @@ void espnow_task(void *pvParameters)
 				ESP_LOGE(TAG, "Send fail to ["MACSTR"], status: %d", MAC2STR(send_cb->mac_addr), send_cb->status);
 			}
 			if (memcmp(s_example_broadcast_mac, send_param->dest_mac, sizeof(send_param->dest_mac)) == 0) {
-				ESP_LOGI(TAG, "Waiting peer...");
+				ESP_LOGI(TAG, "Waiting for peer...");
+			} else {
+				TickType_t currentTick, diffTick;
+				currentTick = xTaskGetTickCount();
+				diffTick = currentTick - lastBroadcastTick;
+				ESP_LOGD(TAG, "diffTick=%"PRIu32, diffTick);
+				if (diffTick > 1000) {
+					ESP_LOGW(TAG, "Lost a peer");
+					memcpy(send_param->dest_mac, s_example_broadcast_mac, ESP_NOW_ETH_ALEN);
+				}
 			}
 			//bool is_broadcast = IS_BROADCAST_ADDR(send_cb->mac_addr);
 
@@ -310,6 +320,7 @@ void espnow_task(void *pvParameters)
 					ESP_LOGD(TAG, "esp_now_is_peer_exist ["MACSTR"]", MAC2STR(recv_cb->mac_addr));
 				}
 				memcpy(send_param->dest_mac, recv_cb->mac_addr, ESP_NOW_ETH_ALEN);
+				lastBroadcastTick = xTaskGetTickCount();
 
 			} else if (ret == EXAMPLE_ESPNOW_DATA_UNICAST) {
 				ESP_LOGD(TAG, "Receive %dth unicast data from: ["MACSTR"]", recv_seq, MAC2STR(recv_cb->mac_addr));
