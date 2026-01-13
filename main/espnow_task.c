@@ -166,7 +166,6 @@ void espnow_task(void *pvParameters)
 
 	// Initialize ESPNOW
 	ESP_ERROR_CHECK(espnow_init(param));
-	ESP_LOGW(TAG, "Connect the USB cable to the host");
 
 	/* Initialize broadcast parameters. */
 	example_espnow_send_param_t *broadcast = NULL;
@@ -222,8 +221,9 @@ void espnow_task(void *pvParameters)
 	memcpy(send_param->dest_mac, s_example_broadcast_mac, ESP_NOW_ETH_ALEN);
 
 	/* Start sending broadcast ESPNOW data. */
-	example_espnow_data_prepare(send_param, payload, payload_length);
-	if (esp_now_send(send_param->dest_mac, send_param->buffer, send_param->len) != ESP_OK) {
+	memset(payload, 0, sizeof(payload));
+	example_espnow_data_prepare(broadcast, payload, payload_length);
+	if (esp_now_send(broadcast->dest_mac, broadcast->buffer, broadcast->len) != ESP_OK) {
 		ESP_LOGE(TAG, "Send error");
 		espnow_deinit(broadcast);
 		espnow_deinit(send_param);
@@ -274,6 +274,9 @@ void espnow_task(void *pvParameters)
 			if (send_cb->status != 0) {
 				ESP_LOGE(TAG, "Send fail to ["MACSTR"], status: %d", MAC2STR(send_cb->mac_addr), send_cb->status);
 			}
+			if (memcmp(s_example_broadcast_mac, send_param->dest_mac, sizeof(send_param->dest_mac)) == 0) {
+				ESP_LOGI(TAG, "Waiting peer...");
+			}
 			//bool is_broadcast = IS_BROADCAST_ADDR(send_cb->mac_addr);
 
 		} else if (evt_send.id == EXAMPLE_ESPNOW_RECV_CB) {
@@ -301,7 +304,7 @@ void espnow_task(void *pvParameters)
 					memcpy(peer->lmk, param.espnow_lmk, ESP_NOW_KEY_LEN);
 					memcpy(peer->peer_addr, recv_cb->mac_addr, ESP_NOW_ETH_ALEN);
 					ESP_ERROR_CHECK( esp_now_add_peer(peer) );
-					ESP_LOGW(TAG, "esp_now_add_peer ["MACSTR"]", MAC2STR(recv_cb->mac_addr));
+					ESP_LOGW(TAG, "Connected peer. esp_now_add_peer ["MACSTR"]", MAC2STR(recv_cb->mac_addr));
 					free(peer);
 				} else {
 					ESP_LOGD(TAG, "esp_now_is_peer_exist ["MACSTR"]", MAC2STR(recv_cb->mac_addr));
@@ -343,9 +346,9 @@ static esp_err_t espnow_init(PARAMETER_t param)
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
 	ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-	ESP_LOGI(__FUNCTION__, "WIFI_MODE_AP=%d", WIFI_MODE_AP);
-	ESP_LOGI(__FUNCTION__, "WIFI_MODE_STA=%d", WIFI_MODE_STA);
-	ESP_LOGI(__FUNCTION__, "ESPNOW_WIFI_MODE=%d", ESPNOW_WIFI_MODE);
+	ESP_LOGI(TAG, "WIFI_MODE_AP=%d", WIFI_MODE_AP);
+	ESP_LOGI(TAG, "WIFI_MODE_STA=%d", WIFI_MODE_STA);
+	ESP_LOGI(TAG, "ESPNOW_WIFI_MODE=%d", ESPNOW_WIFI_MODE);
 	ESP_ERROR_CHECK( esp_wifi_set_mode(ESPNOW_WIFI_MODE) );
 	ESP_ERROR_CHECK( esp_wifi_start());
 
@@ -377,7 +380,7 @@ static esp_err_t espnow_init(PARAMETER_t param)
 	/* Add broadcast peer information to peer list. */
 	esp_now_peer_info_t *peer = malloc(sizeof(esp_now_peer_info_t));
 	if (peer == NULL) {
-		ESP_LOGE(__FUNCTION__, "Malloc peer information fail");
+		ESP_LOGE(TAG, "Malloc peer information fail");
 		esp_now_deinit();
 		return ESP_FAIL;
 	}

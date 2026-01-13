@@ -195,7 +195,7 @@ void udp_trans(void *pvParameters) {
 						fd = 0;
 						connected = false;
 					} else {
-						ESP_LOGI(TAG, "waiting peer");
+						ESP_LOGI(TAG, "Waiting peer...");
 					}
 				}
 			} else if (payload.type == DATA) {
