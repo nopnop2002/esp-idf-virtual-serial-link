@@ -22,19 +22,15 @@ static const char *TAG = "RECV";
 
 // Bradcast Receive Task
 void udp_receive(void *pvParameters) {
-	PARAMETER_t *task_parameter = pvParameters;
-	PARAMETER_t param;
-	memcpy((char *)&param, task_parameter, sizeof(PARAMETER_t));
-	ESP_LOGI(TAG, "Start:param.port=%d param.ipv4=[%s]", param.port, param.ipv4);
+	ESP_LOGI(TAG, "Start:CONFIG_UDP_PORT=%d", CONFIG_UDP_PORT);
 
 	/* set up socket connection */
 	struct sockaddr_in addr;
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
-	addr.sin_port = htons(param.port);
+	addr.sin_port = htons(CONFIG_UDP_PORT);
 	//addr.sin_addr.s_addr = htonl(INADDR_ANY); /* receive message from ANY */
-	//addr.sin_addr.s_addr = inet_addr("0.0.0.0"); /* receive message from ANY */
-	addr.sin_addr.s_addr = inet_addr(param.ipv4);
+	addr.sin_addr.s_addr = inet_addr("0.0.0.0"); /* receive message from ANY */
 
 	/* create the socket */
 	int fd;

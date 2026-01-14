@@ -113,7 +113,6 @@ int connect_peer(struct sockaddr_in *addr, uint16_t port, char *ipv4) {
 	addr->sin_port = htons(port);
 	//addr.sin_addr.s_addr = htonl(INADDR_BROADCAST); /* send message to 255.255.255.255 */
 	//addr.sin_addr.s_addr = inet_addr("255.255.255.255"); /* send message to 255.255.255.255 */
-	//addr.sin_addr.s_addr = inet_addr(param.ipv4);
 	addr->sin_addr.s_addr = inet_addr(ipv4);
 
 	/* create the socket */
@@ -125,27 +124,7 @@ int connect_peer(struct sockaddr_in *addr, uint16_t port, char *ipv4) {
 
 // UDP Send Task
 void udp_trans(void *pvParameters) {
-	PARAMETER_t *task_parameter = pvParameters;
-	PARAMETER_t param;
-	memcpy((char *)&param, task_parameter, sizeof(PARAMETER_t));
-	ESP_LOGI(TAG, "Start:param.port=%d param.ipv4=[%s]", param.port, param.ipv4);
-
-#if 0
-	/* set up socket connection */
-	struct sockaddr_in addr;
-	memset(&addr, 0, sizeof(addr));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(param.port);
-	//addr.sin_addr.s_addr = htonl(INADDR_BROADCAST); /* send message to 255.255.255.255 */
-	//addr.sin_addr.s_addr = inet_addr("255.255.255.255"); /* send message to 255.255.255.255 */
-	addr.sin_addr.s_addr = inet_addr(param.ipv4);
-
-	/* create the socket */
-	int fd;
-	int ret;
-	fd = lwip_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP ); // Create a UDP socket.
-	LWIP_ASSERT("fd >= 0", fd >= 0);
-#endif
+	ESP_LOGI(TAG, "Start:CONFIG_UDP_PORT=%d", CONFIG_UDP_PORT);
 
 	// Socket stuff
 	struct sockaddr_in addr;
@@ -156,8 +135,7 @@ void udp_trans(void *pvParameters) {
 
 	// mDNS stuff
 	char service_type[64];
-	//sprintf(service_type, "_service_%d", CONFIG_UDP_PORT); //prepended with underscore
-	sprintf(service_type, "_service_%d", param.port); //prepended with underscore
+	sprintf(service_type, "_service_%d", CONFIG_UDP_PORT); //prepended with underscore
 	char hostname[64];
 	char ipv4[16];
 	uint16_t port;

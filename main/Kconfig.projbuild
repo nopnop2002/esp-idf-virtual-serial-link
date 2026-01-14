@@ -49,6 +49,19 @@ menu "Application Configuration"
 		string
 		default "esp32-mdns"
 
+	choice ESPNOW_WIFI_MODE
+		depends on ESPNOW_MODE
+		prompt "The interface used by ESPNOW"
+		default ESPNOW_WIFI_MODE_STATION
+		help
+			The interface used by ESPNOW.
+
+		config ESPNOW_WIFI_MODE_STATION
+			bool "STA interface"
+		config ESPNOW_WIFI_MODE_STATION_SOFTAP
+			bool "AP interface"
+	endchoice
+
 	config ESPNOW_PMK
 		depends on ESPNOW_MODE
 		string

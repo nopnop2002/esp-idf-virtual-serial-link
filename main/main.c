@@ -365,16 +365,10 @@ void app_main(void)
 
 #if CONFIG_WIFI_MODE
 	// Start Transmitter
-	PARAMETER_t param1;
-	param1.port = CONFIG_UDP_PORT;
-	strcpy(param1.ipv4, "0.0.0.0"); /* not use */
-	xTaskCreate(udp_trans, "TRANS", 1024*4, (void *)&param1, 2, NULL);
+	xTaskCreate(udp_trans, "TRANS", 1024*4, NULL, 4, NULL);
 
 	// Start Receiver
-	PARAMETER_t param;
-	param.port = CONFIG_UDP_PORT;
-	strcpy(param.ipv4, "0.0.0.0"); /* receive message from ANY */
-	xTaskCreate(udp_receive, "RECV", 1024*4, (void *)&param, 2, NULL);
+	xTaskCreate(udp_receive, "RECV", 1024*4, NULL, 4, NULL);
 
 	PAYLOAD_t payload;
 	while(1) {
@@ -393,17 +387,8 @@ void app_main(void)
 #endif // CONFIG_WIFI_MODE
 
 #if CONFIG_ESPNOW_MODE
-	// Start ESPNOW Take
-	PARAMETER_t param1;
-	strcpy(param1.espnow_pmk, CONFIG_ESPNOW_PMK);
-	strcpy(param1.espnow_lmk, CONFIG_ESPNOW_LMK);
-	param1.espnow_channel = CONFIG_ESPNOW_CHANNEL;
-	param1.espnow_send_len = CONFIG_ESPNOW_SEND_LEN;
-	param1.espnow_enable_long_range = false;
-#if CONFIG_ESPNOW_ENABLE_LONG_RANGE
-	param1.espnow_enable_long_range = true;
-#endif
-	xTaskCreate(espnow_task, "ESPNOW", 1024*4, (void *)&param1, 4, NULL);
+	// Start ESPNOW
+	xTaskCreate(espnow_task, "ESPNOW", 1024*4, NULL, 4, NULL);
 
 	example_espnow_event_t evt_recv;
 	while(1) {

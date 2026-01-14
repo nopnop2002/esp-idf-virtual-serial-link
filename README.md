@@ -143,10 +143,11 @@ When providing two or more sets of communication circuits, it is necessary to ch
 ### Configuration for ESPNOW Unicast
 The two ESPs must use the same channel.   
 In order to perform ESPNOW unicast communication, the MAC address of the other party is required.   
-This app uses PING communication to look up peer MAC addresses with the same channel number.   
+This app uses broadcast communication to search for peer MAC addresses with the same channel number.
+All ESP32 models have two WiFi interfaces: Station Interface and SoftAP Interface.    
+ESPNOW can communicate using either the Station Interface or the SoftAP Interface.   
 
-![config-espnow](https://user-images.githubusercontent.com/6020549/223055585-5e8b91dc-e356-41ba-8d5a-6a35d8c25972.jpg)
-
+![Image](https://github.com/user-attachments/assets/9dfa6ddb-7269-413f-8d99-3a10c45e8f64)
 
 
 When providing two or more sets of communication circuits, it is necessary to change the channel numbers.   

@@ -23,7 +23,7 @@
 #include "esp_mac.h" // for MACSTR
 #include "esp_crc.h" // for esp_crc16_le()
 
-#include "parameter.h"
+//#include "parameter.h"
 #include "esp_now.h"
 #include "espnow_task.h"
 
@@ -37,24 +37,31 @@ static const char *TAG = "ESPNOW";
 static uint8_t s_example_broadcast_mac[ESP_NOW_ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 static uint16_t s_example_espnow_seq[EXAMPLE_ESPNOW_DATA_MAX] = { 0, 0 };
 
-static esp_err_t espnow_init(PARAMETER_t param);
+static esp_err_t espnow_init();
 static void espnow_deinit(example_espnow_send_param_t *send_param);
 
 /* ESPNOW sending or receiving callback function is called in WiFi task.
  * Users should not do lengthy operations from this task. Instead, post
  * necessary data to a queue and handle it from a lower priority task. */
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
 static void example_espnow_send_cb(const esp_now_send_info_t *tx_info, esp_now_send_status_t status)
+#else
+static void example_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
+#endif
 {
 	example_espnow_event_t evt;
 	example_espnow_event_send_cb_t *send_cb = &evt.info.send_cb;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+    const uint8_t *mac_addr = tx_info->des_addr;
+#endif
 
-	if (tx_info == NULL) {
+	if (mac_addr == NULL) {
 		ESP_LOGE(__FUNCTION__, "Send cb arg error");
 		return;
 	}
 
 	evt.id = EXAMPLE_ESPNOW_SEND_CB;
-	memcpy(send_cb->mac_addr, tx_info->des_addr, ESP_NOW_ETH_ALEN);
+	memcpy(send_cb->mac_addr, mac_addr, ESP_NOW_ETH_ALEN);
 	send_cb->status = status;
 	if (xQueueSend(xQueueESPNOWSend, &evt, ESPNOW_MAXDELAY) != pdTRUE) {
 		ESP_LOGW(__FUNCTION__, "xQueueSend fail");
@@ -89,7 +96,6 @@ static void example_espnow_recv_cb(const esp_now_recv_info_t *recv_info, const u
 }
 
 /* Parse received ESPNOW data. */
-//int example_espnow_data_parse(uint8_t *data, uint16_t data_len, uint8_t *state, uint16_t *seq, int *magic)
 int example_espnow_data_parse(uint8_t *data, uint16_t data_len, uint8_t *state, uint16_t *seq, uint32_t *magic)
 {
 	example_espnow_data_t *buf = (example_espnow_data_t *)data;
@@ -134,23 +140,12 @@ void example_espnow_data_prepare(example_espnow_send_param_t *send_param, uint8_
 
 void espnow_task(void *pvParameters)
 {
-	PARAMETER_t *task_parameter = pvParameters;
-	PARAMETER_t param;
-	memcpy((char *)&param, task_parameter, sizeof(PARAMETER_t));
-	ESP_LOGI(TAG, "Start:param.espnow_pmk=[%s]", param.espnow_pmk);
-	ESP_LOGI(TAG, "Start:param.espnow_lmk=[%s]", param.espnow_lmk);
-	ESP_LOGI(TAG, "Start:param.espnow_channel=[%d]", param.espnow_channel);
-	ESP_LOGI(TAG, "Start:param.espnow_send_len=[%d]", param.espnow_send_len);
-	ESP_LOGI(TAG, "Start:param.espnow_enable_long_range=[%d]", param.espnow_enable_long_range);
-
-	example_espnow_event_t evt_send;
-	uint8_t recv_state = 0;
-	uint16_t recv_seq = 0;
-	uint32_t recv_magic = 0;
-	int ret;
 	/*
-	ESPNOW can carry payloads of up to 250 bytes
-	This sample uses a 10 byte header.
+	ESPNOW version has been updated to 2.0 from ESP-IDF V5.4. 
+	In ESPNOW Ver. 1, the maximum payload size was 250 bytes, but in Ver. 2 it has been expanded to 1470 bytes.
+	This project uses a 10 byte header.
+	Therefore, the maximum payload size is 240 bytes.
+
 	typedef struct {
 		uint8_t type;		//Broadcast or unicast ESPNOW data.
 		uint8_t state;		//Indicate that if has received broadcast ESPNOW data or not.
@@ -161,11 +156,11 @@ void espnow_task(void *pvParameters)
 	} __attribute__((packed)) example_espnow_data_t;
 	*/
 	uint8_t payload[240];
-	int payload_length = param.espnow_send_len - sizeof(example_espnow_data_t);
+	int payload_length = CONFIG_ESPNOW_SEND_LEN - sizeof(example_espnow_data_t);
 	ESP_LOGI(TAG, "payload_length=%d", payload_length);
 
 	// Initialize ESPNOW
-	ESP_ERROR_CHECK(espnow_init(param));
+	ESP_ERROR_CHECK(espnow_init());
 
 	/* Initialize broadcast parameters. */
 	example_espnow_send_param_t *broadcast = NULL;
@@ -180,12 +175,11 @@ void espnow_task(void *pvParameters)
 	broadcast->unicast = false;
 	broadcast->broadcast = true;
 	broadcast->state = 0;
-	//broadcast->magic = param.espnow_channel;
 	broadcast->magic = 0;
 	//broadcast->count = CONFIG_ESPNOW_SEND_COUNT;
 	//broadcast->delay = CONFIG_ESPNOW_SEND_DELAY;
-	broadcast->len = param.espnow_send_len;
-	broadcast->buffer = malloc(param.espnow_send_len);
+	broadcast->len = CONFIG_ESPNOW_SEND_LEN;
+	broadcast->buffer = malloc(CONFIG_ESPNOW_SEND_LEN);
 	if (broadcast->buffer == NULL) {
 		ESP_LOGE(TAG, "Malloc broadcast->buffer fail");
 		espnow_deinit(broadcast);
@@ -206,12 +200,11 @@ void espnow_task(void *pvParameters)
 	send_param->unicast = true;
 	send_param->broadcast = false;
 	send_param->state = 0;
-	//send_param->magic = param.espnow_channel;
 	send_param->magic = 0;
 	//send_param->count = CONFIG_ESPNOW_SEND_COUNT;
 	//send_param->delay = CONFIG_ESPNOW_SEND_DELAY;
-	send_param->len = param.espnow_send_len;
-	send_param->buffer = malloc(param.espnow_send_len);
+	send_param->len = CONFIG_ESPNOW_SEND_LEN;
+	send_param->buffer = malloc(CONFIG_ESPNOW_SEND_LEN);
 	if (send_param->buffer == NULL) {
 		ESP_LOGE(TAG, "Malloc send_param->buffer fail");
 		espnow_deinit(broadcast);
@@ -230,6 +223,9 @@ void espnow_task(void *pvParameters)
 		vTaskDelete(NULL);
 	}
 
+	example_espnow_event_t evt_send;
+	uint16_t recv_seq = 0;
+	int ret;
 	TickType_t lastBroadcastTick = xTaskGetTickCount();
 	while (xQueueReceive(xQueueESPNOWSend, &evt_send, portMAX_DELAY) == pdTRUE) {
 		if (evt_send.id == EXAMPLE_ESPNOW_PING_RQ) {
@@ -293,6 +289,8 @@ void espnow_task(void *pvParameters)
 			ESP_LOGD(TAG, "EXAMPLE_ESPNOW_RECV_CB");
 			example_espnow_event_recv_cb_t *recv_cb = &evt_send.info.recv_cb;
 
+			uint8_t recv_state = 0;
+			uint32_t recv_magic = 0;
 			ret = example_espnow_data_parse(recv_cb->data, recv_cb->data_len, &recv_state, &recv_seq, &recv_magic);
 			ESP_LOGD(TAG, "ret=%d recv_seq=%d", ret, recv_seq);
 			if (ret == EXAMPLE_ESPNOW_DATA_BROADCAST) {
@@ -308,10 +306,10 @@ void espnow_task(void *pvParameters)
 						vTaskDelete(NULL);
 					}
 					memset(peer, 0, sizeof(esp_now_peer_info_t));
-					peer->channel = param.espnow_channel;
+					peer->channel = CONFIG_ESPNOW_CHANNEL;
 					peer->ifidx = ESPNOW_WIFI_IF;
 					peer->encrypt = true;
-					memcpy(peer->lmk, param.espnow_lmk, ESP_NOW_KEY_LEN);
+					memcpy(peer->lmk, CONFIG_ESPNOW_LMK, ESP_NOW_KEY_LEN);
 					memcpy(peer->peer_addr, recv_cb->mac_addr, ESP_NOW_ETH_ALEN);
 					ESP_ERROR_CHECK( esp_now_add_peer(peer) );
 					ESP_LOGW(TAG, "Connected with peer. esp_now_add_peer ["MACSTR"]", MAC2STR(recv_cb->mac_addr));
@@ -345,11 +343,10 @@ void espnow_task(void *pvParameters)
 }
 
 
-static esp_err_t espnow_init(PARAMETER_t param)
+static esp_err_t espnow_init()
 {
 	ESP_LOGI(TAG, "Start espnow_init");
-	ESP_LOGI(TAG, "espnow_channel=%d", param.espnow_channel);
-	ESP_LOGI(TAG, "espnow_enable_long_range=%d", param.espnow_enable_long_range);
+	ESP_LOGI(TAG, "espnow_channel=%d", CONFIG_ESPNOW_CHANNEL);
 
 	/* WiFi should start before using ESPNOW */
 	ESP_ERROR_CHECK(esp_netif_init());
@@ -369,16 +366,16 @@ static esp_err_t espnow_init(PARAMETER_t param)
 	wifi_second_chan_t second;
 	ESP_ERROR_CHECK(esp_wifi_get_channel(&primary, &second));
 	ESP_LOGI(TAG, "current primary channel=%d", primary);
-	primary = param.espnow_channel;
+	primary = CONFIG_ESPNOW_CHANNEL;
 	ESP_ERROR_CHECK(esp_wifi_set_channel(primary, WIFI_SECOND_CHAN_NONE));
 	ESP_ERROR_CHECK(esp_wifi_get_channel(&primary, &second));
 	ESP_LOGI(TAG, "new primary channel=%d", primary);
 
+#if CONFIG_ESPNOW_ENABLE_LONG_RANGE
 	/* Set to long range */
-	if (param.espnow_enable_long_range) {
-		ESP_LOGW(TAG, "Set to long range");
-		ESP_ERROR_CHECK( esp_wifi_set_protocol(ESPNOW_WIFI_IF, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR) );
-	}
+	ESP_LOGW(TAG, "Set to long range");
+	ESP_ERROR_CHECK( esp_wifi_set_protocol(ESPNOW_WIFI_IF, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_LR) );
+#endif
 
 	/* Initialize ESPNOW and register sending and receiving callback function. */
 	ESP_ERROR_CHECK( esp_now_init() );
@@ -386,7 +383,7 @@ static esp_err_t espnow_init(PARAMETER_t param)
 	ESP_ERROR_CHECK( esp_now_register_recv_cb(example_espnow_recv_cb) );
 
 	/* Set primary master key. */
-	ESP_ERROR_CHECK( esp_now_set_pmk((uint8_t *)param.espnow_pmk) );
+	ESP_ERROR_CHECK( esp_now_set_pmk((uint8_t *)CONFIG_ESPNOW_PMK) );
 
 	/* Add broadcast peer information to peer list. */
 	esp_now_peer_info_t *peer = malloc(sizeof(esp_now_peer_info_t));
@@ -398,7 +395,7 @@ static esp_err_t espnow_init(PARAMETER_t param)
 
 	// esp_now_add_peer() to add the device to the paired device list before you send data to this device. 
 	memset(peer, 0, sizeof(esp_now_peer_info_t));
-	peer->channel = param.espnow_channel;
+	peer->channel = CONFIG_ESPNOW_CHANNEL;
 	peer->ifidx = ESPNOW_WIFI_IF;
 	peer->encrypt = false;
 	memcpy(peer->peer_addr, s_example_broadcast_mac, ESP_NOW_ETH_ALEN);
