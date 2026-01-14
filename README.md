@@ -46,7 +46,8 @@ ESPNOW eliminates the need for a router.
 +------------+     +------------+        +------------+     +------------+ 
 ```
 
-___Since this application performs unicast communication, there is no limit to the order in which ESP32 is started.___   
+___This application has the ability to search for communication partners.___   
+___Therefore, there are no restrictions on the startup order of the ESP32.___   
 
 # Limitation
 The number of characters that can be read at once with tinyusb_cdcacm_read() is limited to 64 bytes.   
