@@ -75,6 +75,9 @@ I (291393) MAIN: Wireless-->USB [A*7A
 ESP-IDF V5.0 or later.   
 ESP-IDF V4.4 release branch reached EOL in July 2024.   
 
+A note about ESPNOW   
+Since ESP-IDF V5.4, the ESPNOW version has been updated from 1.0 to 2.0.   
+ESPNOW versions 1 and 2 can communicate with each other.   
 
 # Hardware requirements
 1. ESP32-S2/S3 Development board   
